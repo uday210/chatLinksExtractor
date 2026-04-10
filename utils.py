@@ -37,7 +37,7 @@ def extract_links(text, link_types=None):
         matches = re.findall(pattern, text, re.IGNORECASE)
         links.extend(matches)
     
-    # Clean up links (remove trailing punctuation and common markers)
+    # Clean up and normalize links
     cleaned_links = []
     for link in links:
         # Remove common trailing punctuation
@@ -45,7 +45,9 @@ def extract_links(text, link_types=None):
         # Remove whitespace
         link = link.strip()
         if link and not link.startswith('['):
-            cleaned_links.append(link)
+            # Normalize the link
+            normalized_link = normalize_url(link)
+            cleaned_links.append(normalized_link)
     
     # Filter by link types
     filtered_links = []
@@ -55,6 +57,31 @@ def extract_links(text, link_types=None):
             filtered_links.append(link)
     
     return filtered_links
+
+
+def normalize_url(url):
+    """Normalize URLs for better deduplication"""
+    # Convert to lowercase
+    url = url.lower()
+    
+    # Add https:// if missing protocol for common domains
+    if url.startswith('t.me/') or url.startswith('telegram.me/'):
+        url = 'https://' + url
+    elif url.startswith('www.amazon.') or url.startswith('amazon.'):
+        if not url.startswith('http'):
+            url = 'https://' + url
+    elif url.startswith('youtu.be/') or url.startswith('youtube.com/'):
+        if not url.startswith('http'):
+            url = 'https://' + url
+    elif url.startswith('github.com/'):
+        if not url.startswith('http'):
+            url = 'https://' + url
+    
+    # Remove trailing slashes (except for root domain)
+    if url.count('/') > 2:  # Has path
+        url = url.rstrip('/')
+    
+    return url
 
 
 def categorize_link(link):

@@ -1,5 +1,7 @@
 [22/09/25, 8:49:52 PM] John: Check this out https://t.me/mychannel
 [22/09/25, 9:15:30 PM] Sarah: @john123 found this t.me/awesome
+[22/09/25, 9:20:00 PM] Mike: Duplicate test: https://t.me/c/1302730016/131368
+[22/09/25, 9:25:00 PM] John: Same link without https: t.me/c/1302730016/131368
 [23/09/25, 10:30:15 AM] John: https://example.com and https://t.me/testlink
 [25/10/25, 2:45:20 PM] Mike: Hey see this https://youtu.be/dQw4w9WgXcQ
 [25/10/25, 3:12:00 PM] Sarah: I like https://t.me/mychannel
