@@ -1,6 +1,6 @@
 import streamlit as st
-import pandas as pd
-from io import StringIO
+import polars as pl
+from io import StringIO, BytesIO
 from utils import extract_links, extract_names, parse_dates, group_by_month, categorize_link
 
 st.set_page_config(page_title="Chat Link Extractor", layout="wide")
@@ -96,14 +96,16 @@ if st.button("🚀 Extract & Process", type="primary", use_container_width=True)
             # Display table
             st.subheader("📋 Results")
             if isinstance(grouped_data, list) and grouped_data:
-                df = pd.DataFrame(grouped_data)
-                st.dataframe(df, use_container_width=True, height=400)
+                df = pl.DataFrame(grouped_data)
+                st.dataframe(df.to_pandas(), use_container_width=True, height=400)
                 
                 # CSV Download
-                csv = df.to_csv(index=False)
+                csv_buffer = BytesIO()
+                df.write_csv(csv_buffer)
+                csv_data = csv_buffer.getvalue()
                 st.download_button(
                     label="📥 Download as CSV",
-                    data=csv,
+                    data=csv_data,
                     file_name="extracted_links.csv",
                     mime="text/csv",
                     use_container_width=True
@@ -117,10 +119,13 @@ if st.button("🚀 Extract & Process", type="primary", use_container_width=True)
                 unique_names = sorted(list(set(names)))
                 st.write(", ".join(unique_names))
                 
-                names_csv = pd.DataFrame({"Names": unique_names}).to_csv(index=False)
+                names_df = pl.DataFrame({"Names": unique_names})
+                names_csv_buffer = BytesIO()
+                names_df.write_csv(names_csv_buffer)
+                names_csv_data = names_csv_buffer.getvalue()
                 st.download_button(
                     label="📥 Download Names as CSV",
-                    data=names_csv,
+                    data=names_csv_data,
                     file_name="extracted_names.csv",
                     mime="text/csv",
                     use_container_width=True
