@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import StringIO
-from utils import extract_links, extract_names, parse_dates, group_by_month
+from utils import extract_links, extract_names, parse_dates, group_by_month, categorize_link
 
 st.set_page_config(page_title="Chat Link Extractor", layout="wide")
 st.title("🔗 Chat Link Extractor")
@@ -13,6 +13,15 @@ with st.sidebar:
     extract_names_toggle = st.checkbox("Include Names/Usernames", value=False)
     group_by_month_toggle = st.checkbox("Group by Month", value=True)
     deduplicate = st.checkbox("Remove Duplicates", value=True)
+    
+    # Link type filtering
+    st.subheader("🔍 Link Filters")
+    link_types = st.multiselect(
+        "Select link types to extract:",
+        ["Telegram", "Amazon", "YouTube", "GitHub", "Other"],
+        default=["Telegram", "Amazon", "YouTube", "GitHub", "Other"],
+        help="Choose which types of links to extract from your chat history"
+    )
 
 # Main content area
 col1, col2 = st.columns([1, 1])
@@ -42,8 +51,8 @@ if st.button("🚀 Extract & Process", type="primary", use_container_width=True)
         st.error("Please provide chat history text or upload a file!")
     else:
         with st.spinner("Processing..."):
-            # Extract links
-            links = extract_links(text_input)
+            # Extract links with filtering
+            links = extract_links(text_input, link_types)
             
             # Extract names if toggled
             names = extract_names(text_input) if extract_names_toggle else []
@@ -51,17 +60,24 @@ if st.button("🚀 Extract & Process", type="primary", use_container_width=True)
             # Parse dates and links together
             dated_links = parse_dates(text_input)
             
+            # Filter dated_links based on selected link types
+            filtered_dated_links = {}
+            for date, urls in dated_links.items():
+                filtered_urls = [url for url in urls if categorize_link(url) in link_types]
+                if filtered_urls:
+                    filtered_dated_links[date] = filtered_urls
+            
             # Deduplicate if toggled
             if deduplicate:
                 links = list(dict.fromkeys(links))  # Preserves order while deduping
-                dated_links = {k: list(dict.fromkeys(v)) for k, v in dated_links.items()}
+                filtered_dated_links = {k: list(dict.fromkeys(v)) for k, v in filtered_dated_links.items()}
             
             # Group by month if toggled
             if group_by_month_toggle:
-                grouped_data = group_by_month(dated_links, extract_names_toggle)
+                grouped_data = group_by_month(filtered_dated_links, extract_names_toggle)
             else:
                 grouped_data = []
-                for date, urls in dated_links.items():
+                for date, urls in filtered_dated_links.items():
                     for url in urls:
                         grouped_data.append({"Date": date, "Link": url})
             

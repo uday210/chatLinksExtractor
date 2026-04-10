@@ -27,8 +27,11 @@ NAME_PATTERNS = [
 ]
 
 
-def extract_links(text):
-    """Extract all links from text - optimized for Telegram exports"""
+def extract_links(text, link_types=None):
+    """Extract all links from text - optimized for Telegram exports with filtering"""
+    if link_types is None:
+        link_types = ["Telegram", "Amazon", "YouTube", "GitHub", "Other"]
+    
     links = []
     for pattern in LINK_PATTERNS:
         matches = re.findall(pattern, text, re.IGNORECASE)
@@ -44,7 +47,29 @@ def extract_links(text):
         if link and not link.startswith('['):
             cleaned_links.append(link)
     
-    return cleaned_links
+    # Filter by link types
+    filtered_links = []
+    for link in cleaned_links:
+        link_type = categorize_link(link)
+        if link_type in link_types:
+            filtered_links.append(link)
+    
+    return filtered_links
+
+
+def categorize_link(link):
+    """Categorize a link into types"""
+    link_lower = link.lower()
+    if 't.me' in link_lower or 'telegram.me' in link_lower:
+        return "Telegram"
+    elif 'amazon.' in link_lower:
+        return "Amazon"
+    elif 'youtu.be' in link_lower or 'youtube.com' in link_lower:
+        return "YouTube"
+    elif 'github.com' in link_lower:
+        return "GitHub"
+    else:
+        return "Other"
 
 
 def extract_names(text):
